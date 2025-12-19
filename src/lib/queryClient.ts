@@ -17,6 +17,7 @@ type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update'
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      networkMode: 'offlineFirst',
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
       staleTime: 1000 * 60 * 5,    // 5 minutes
       // Retry queries if network fails
@@ -27,6 +28,7 @@ export const queryClient = new QueryClient({
       },
     },
     mutations: {
+       networkMode: 'offlineFirst',
        // Retry mutations if network is offline
        retry: 3, 
     }

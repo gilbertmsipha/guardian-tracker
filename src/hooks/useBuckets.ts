@@ -44,8 +44,30 @@ export function useCreateBucket() {
   return useMutation({
     mutationKey: ['createBucket'],
     mutationFn: createBucket,
-    onSuccess: () => {
-      // Refresh the list immediately after creating
+    onMutate: async (newBucket) => {
+      await queryClient.cancelQueries({ queryKey: ['buckets'] });
+      const previousBuckets = queryClient.getQueryData<Bucket[]>(['buckets']);
+
+      if (previousBuckets) {
+        queryClient.setQueryData<Bucket[]>(['buckets'], (old) => {
+          const optimisticBucket: Bucket = {
+            id: `temp-${Date.now()}`,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            current_balance: 0,
+            ...newBucket,
+          };
+          return [...(old || []), optimisticBucket].sort((a, b) => a.name.localeCompare(b.name));
+        });
+      }
+      return { previousBuckets };
+    },
+    onError: (_err, _newBucket, context) => {
+      if (context?.previousBuckets) {
+        queryClient.setQueryData(['buckets'], context.previousBuckets);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['buckets'] });
     },
   });

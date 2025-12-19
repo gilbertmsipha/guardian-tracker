@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSubscriptions, createSubscription, updateSubscription, deleteSubscription } from '../api/subscriptions';
 import type { Database } from '@/supabase/database-types';
 
+type Subscription = Database['public']['Tables']['subscriptions']['Row'];
+type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert'];
 type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update'];
 
 // Hook to READ data
@@ -20,8 +22,28 @@ export function useCreateSubscription() {
   return useMutation({
     mutationKey: ['createSubscription'],
     mutationFn: createSubscription,
-    onSuccess: () => {
-      // Refresh the list immediately after creating
+    onMutate: async (newSub: SubscriptionInsert) => {
+      await queryClient.cancelQueries({ queryKey: ['subs'] });
+      const previousSubs = queryClient.getQueryData<Subscription[]>(['subs']);
+
+      if (previousSubs) {
+        queryClient.setQueryData<Subscription[]>(['subs'], (old) => {
+          const optimisticSub: any = {
+             id: `temp-${Date.now()}`,
+             created_at: new Date().toISOString(),
+             ...newSub
+          };
+          return [...(old || []), optimisticSub];
+        });
+      }
+      return { previousSubs };
+    },
+    onError: (_err, _newSub, context) => {
+      if (context?.previousSubs) {
+        queryClient.setQueryData(['subs'], context.previousSubs);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['subs'] });
     },
   });
@@ -35,7 +57,23 @@ export function useUpdateSubscription() {
     mutationKey: ['updateSubscription'],
     mutationFn: ({ id, updates }: { id: string; updates: SubscriptionUpdate }) =>
       updateSubscription(id, updates),
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['subs'] });
+      const previousSubs = queryClient.getQueryData<Subscription[]>(['subs']);
+
+      if (previousSubs) {
+        queryClient.setQueryData<Subscription[]>(['subs'], (old) => 
+          old?.map(sub => sub.id === id ? { ...sub, ...updates } : sub) || []
+        );
+      }
+      return { previousSubs };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousSubs) {
+        queryClient.setQueryData(['subs'], context.previousSubs);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['subs'] });
     },
   });
@@ -48,7 +86,23 @@ export function useDeleteSubscription() {
   return useMutation({
     mutationKey: ['deleteSubscription'],
     mutationFn: deleteSubscription,
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['subs'] });
+      const previousSubs = queryClient.getQueryData<Subscription[]>(['subs']);
+
+      if (previousSubs) {
+        queryClient.setQueryData<Subscription[]>(['subs'], (old) => 
+          old?.filter(sub => sub.id !== id) || []
+        );
+      }
+      return { previousSubs };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousSubs) {
+        queryClient.setQueryData(['subs'], context.previousSubs);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['subs'] });
     },
   });
