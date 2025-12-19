@@ -42,6 +42,7 @@ export function useCreateBucket() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['createBucket'],
     mutationFn: createBucket,
     onSuccess: () => {
       // Refresh the list immediately after creating

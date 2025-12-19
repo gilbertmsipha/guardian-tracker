@@ -11,6 +11,7 @@ export function useEditBucket() {
   const queryClient = useQueryClient();
 
   const updateBucketMutation = useMutation({
+    mutationKey: ['updateBucket'],
     mutationFn: ({ id, updates }: { id: string; updates: BucketUpdate }) =>
       updateBucket(id, updates),
     onSuccess: () => {
@@ -20,6 +21,7 @@ export function useEditBucket() {
   });
 
   const deleteBucket = useMutation<{ id: string }, Error, string, ContextType>({
+    mutationKey: ['deleteBucket'],
     mutationFn: async (id: string) => {
       await deleteBucketApi(id);
       return { id };

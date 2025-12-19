@@ -18,6 +18,7 @@ export function useCreateSubscription() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['createSubscription'],
     mutationFn: createSubscription,
     onSuccess: () => {
       // Refresh the list immediately after creating
@@ -31,6 +32,7 @@ export function useUpdateSubscription() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['updateSubscription'],
     mutationFn: ({ id, updates }: { id: string; updates: SubscriptionUpdate }) =>
       updateSubscription(id, updates),
     onSuccess: () => {
@@ -44,6 +46,7 @@ export function useDeleteSubscription() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['deleteSubscription'],
     mutationFn: deleteSubscription,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subs'] });

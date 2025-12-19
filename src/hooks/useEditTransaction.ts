@@ -9,6 +9,7 @@ export function useEditTransaction() {
   const queryClient = useQueryClient();
 
   const editMutation = useMutation({
+    mutationKey: ['updateTransaction'],
     mutationFn: ({ id, updates }: { id: string; updates: TransactionUpdate }) => 
       updateTransaction(id, updates),
     onSuccess: () => {
@@ -18,6 +19,7 @@ export function useEditTransaction() {
   });
 
   const deleteMutation = useMutation({
+    mutationKey: ['deleteTransaction'],
     mutationFn: deleteTransaction,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });

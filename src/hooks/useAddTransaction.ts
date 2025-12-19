@@ -6,6 +6,7 @@ export function useAddTransaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['addTransaction'],
     mutationFn: addTransaction,
     onSuccess: () => {
       // 1. Invalidate the cache

@@ -6,6 +6,7 @@ export function useTransfer() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['transferFunds'],
     mutationFn: transferFunds,
     onSuccess: () => {
       // Refresh transactions AND buckets
